@@ -1,0 +1,24 @@
+---
+abstract: "Takes a series of lines in Sentinel Benefits format and writes them out as QIF files, subject to the symbol mappings specified.\r"
+author:
+  - 'David Solimano <david@solimano.org>'
+build_requires: {}
+configure_requires:
+  ExtUtils::MakeMaker: 6.31
+generated_by: 'Dist::Zilla version 2.101040'
+license: gpl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Finance-Bank-SentinelBenefits-Csv401kConverter
+recommends: {}
+requires:
+  DateTime: 0.53
+  Finance::QIF: 3
+  Modern::Perl: 1.03
+  Moose: 0.98
+  Moose::Util::TypeConstraints: 0.98
+  MooseX::Method::Signatures: 0.30
+  MooseX::StrictConstructor: 0.08
+  Scalar::Util: 1.22
+version: 0.5
