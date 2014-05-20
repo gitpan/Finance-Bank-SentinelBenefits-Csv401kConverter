@@ -12,8 +12,8 @@ my $output_main = 'C:/programming/sbwpt/main.qif';
 my $output_flip  = 'C:/programming/sbwpt/alt.qif';
 
 my $trade_date = DateTime->new( year  => 2010 ,
-			  month => 3   ,
-			  day   => 2   ,);
+			  month => 8   ,
+			  day   => 16   ,);
 my $main_account='LaBranche 401(k)';
 my $flip_account='LaBranche 401(k) seg';
 
@@ -24,15 +24,14 @@ my $symbol_map = Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap->n
 close($fh_symbol_map) or die 'Unable to close symbol map fh';
 
 my $trade_input;
-open ($trade_input, "C:/programming/sbwpt/20091118.csv") or die "Unable to open input file";
+open ($trade_input, "C:/programming/sbwpt/data.csv") or die "Unable to open input file";
 
 {
   my $parser = Finance::Bank::SentinelBenefits::Csv401kConverter->new
     (
      primary_output_file => $output_main,
-     companymatch_output_file => $output_flip,
      trade_input         => $trade_input,
-     trade_date          => $trade_date,
+#     trade_date          => $trade_date,
      symbol_map          => $symbol_map,
      account             => $main_account,
      companymatch_account     => $flip_account,

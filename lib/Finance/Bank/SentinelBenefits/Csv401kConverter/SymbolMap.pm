@@ -1,17 +1,15 @@
 package Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap;
-BEGIN {
-  $Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap::VERSION = '0.5';
-}
+$Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap::VERSION = '1.0';
 use Modern::Perl;
 
 =head1 NAME
 
+Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap - fuzzy lookup 
+of security descriptions to symbols
 
 =head1 VERSION
 
-version 0.5
-Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap - fuzzy lookup 
-of security descriptions to symbols
+version 1.0
 
 =head1 SYNOPSIS
 
@@ -125,7 +123,7 @@ no Moose;
 
 __PACKAGE__->meta->make_immutable;
 
-# Copyright 2009 David Solimano
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

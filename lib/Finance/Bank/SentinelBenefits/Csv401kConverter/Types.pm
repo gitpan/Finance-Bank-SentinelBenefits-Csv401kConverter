@@ -1,18 +1,16 @@
 package Finance::Bank::SentinelBenefits::Csv401kConverter::Types;
-BEGIN {
-  $Finance::Bank::SentinelBenefits::Csv401kConverter::Types::VERSION = '0.5';
-}
+$Finance::Bank::SentinelBenefits::Csv401kConverter::Types::VERSION = '1.0';
 use Modern::Perl;
 
 use Moose::Util::TypeConstraints;
 
-enum 'ContributionSource' => qw(Deferral Match);
-enum 'TradeSide' => qw(Buy Sell ShtSell);
+enum 'ContributionSource' => [ qw(Deferral Match) ];
+enum 'TradeSide' => [ qw(Buy Sell ShtSell ReinvDiv) ];
 
 no Moose::Util::TypeConstraints;
 
 1;
-# Copyright 2009 David Solimano
+# Copyright 2009-2014 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

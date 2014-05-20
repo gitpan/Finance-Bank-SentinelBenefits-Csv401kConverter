@@ -1,4 +1,4 @@
-use Test::More tests => 51;
+use Test::More tests => 83;
 use lib './lib';
 use DateTime;
 use Modern::Perl;
@@ -20,6 +20,9 @@ my %symbol_hash = (
 
 my $symbol_map = Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap->new( symbol_map => \%symbol_hash );
 
+####
+#Sample data
+####
 my $header_line = 'Date & Source of Money,Status,Details,Units,Price,Dollars,Redemption Fee';
 my $date_line = '11/02/09';
 my $symbol_line = 'Employer Matching Contribution,Settled,Match of $8.13 to Foobar Dividend Portfolio - ALGAEMicro-organism Investment Value Fund.,2.67,4.17,11.1339,0';
@@ -27,6 +30,10 @@ my $no_symbol_line = 'Employer Matching Contribution,Settled,Match of $16.67 to 
 my $deferral_line = 'Employee 401k Contribution,Settled,Deferral of $10.83 to Foobar Dividend Portfolio - GOPIPPurple Bank LLC Fund.,2.21,1.46,3.2266,0';
 my $buy_line = 'Employee 401k Contribution,Settled,Buy Foobar Portfolio - GOPIPPurple Bank LLC Fund.(Dollar certain),2.21,1.46,3.2266,0';
 my $sell_line = 'Employer Matching Contribution,Settled,Sell Foobar Portfolio - GOPIPPurple Bank LLC Fund.(Unit certain),-2.21,1.46,-$3.2266,0';
+my $div_line = 'Employee 401k Contribution,Settled,Gain/Loss of of $0.11 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.,0.001,133.49,0.11,0';
+my $div_match_line = 'Employer Matching Contribution,Settled,Gain/Loss of of $0.17 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.,0.006,28.04,0.17,0';
+my $div_line_true = 'Employee 401k Contribution,Settled,Dividend of of $0.11 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.,0.001,133.49,0.11,0';
+my $div_match_line_true = 'Employer Matching Contribution,Settled,Dividend of of $0.17 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.,0.006,28.04,0.17,0';
 
 my $line_parser = Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser->new( symbol_map => $symbol_map );
 
@@ -120,7 +127,59 @@ diag( 'testing valid lines - employee match sell, with symbol' );
     is( $line->side(), 'Sell', 'We are selling here' );
 }
 
-# Copyright 2009-2010 David Solimano
+diag( 'testing employee contribution dividend' );
+{
+  my $line = $line_parser->parse_line($div_line, $date);
+  is( $line->date()->subtract_datetime( $date )->seconds, 0, 'Datetime on line should match input datetime' );
+  is( $line->symbol(), 'GOPIP', 'Symbol should be GOPIP' );
+  is( $line->memo(), 'Gain/Loss of of $0.11 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.' );
+  is( $line->quantity(), 0.001 );
+  is( $line->price(), 133.49 );
+  is( $line->total(), 0.11 );
+  is( $line->source(), 'Deferral', 'This should be picked up as a match transaction' );
+  is( $line->side(), 'ReinvDiv', 'We are reinvesting a dividend here' );
+}
+
+diag( 'testing employer match dividend' );
+{
+  my $line = $line_parser->parse_line($div_match_line, $date);
+  is( $line->date()->subtract_datetime( $date )->seconds, 0, 'Datetime on line should match input datetime' );
+  is( $line->symbol(), 'GOPIP', 'Symbol should be GOPIP' );
+  is( $line->memo(), 'Gain/Loss of of $0.17 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.' );
+  is( $line->quantity(), 0.006 );
+  is( $line->price(), 28.04 );
+  is( $line->total(), 0.17 );
+  is( $line->source(), 'Match', 'This should be picked up as a match transaction' );
+  is( $line->side(), 'ReinvDiv', 'We are reinvesting a dividend here' );
+}
+
+diag( 'testing employee contribution dividend true' );
+{
+  my $line = $line_parser->parse_line($div_line_true, $date);
+  is( $line->date()->subtract_datetime( $date )->seconds, 0, 'Datetime on line should match input datetime' );
+  is( $line->symbol(), 'GOPIP', 'Symbol should be GOPIP' );
+  is( $line->memo(), 'Dividend of of $0.11 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.' );
+  is( $line->quantity(), 0.001 );
+  is( $line->price(), 133.49 );
+  is( $line->total(), 0.11 );
+  is( $line->source(), 'Deferral', 'This should be picked up as a match transaction' );
+  is( $line->side(), 'ReinvDiv', 'We are reinvesting a dividend here' );
+}
+
+diag( 'testing employer match dividend true' );
+{
+  my $line = $line_parser->parse_line($div_match_line_true, $date);
+  is( $line->date()->subtract_datetime( $date )->seconds, 0, 'Datetime on line should match input datetime' );
+  is( $line->symbol(), 'GOPIP', 'Symbol should be GOPIP' );
+  is( $line->memo(), 'Dividend of of $0.17 to Foobar Portfolio - GOPIPPurple Bank LLC Fund.' );
+  is( $line->quantity(), 0.006 );
+  is( $line->price(), 28.04 );
+  is( $line->total(), 0.17 );
+  is( $line->source(), 'Match', 'This should be picked up as a match transaction' );
+  is( $line->side(), 'ReinvDiv', 'We are reinvesting a dividend here' );
+}
+
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

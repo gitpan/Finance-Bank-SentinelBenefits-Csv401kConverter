@@ -1,4 +1,4 @@
-use Test::More tests => 9;
+use Test::More tests => 10;
 use lib './lib';
 
 
@@ -21,6 +21,7 @@ BEGIN {
       MooseX::StrictConstructor
       Scalar::Util
       Moose::Util::TypeConstraints
+      DateTime::Format::Flexible
     );
     foreach my $module (@dependencies) {
         use_ok $module or BAIL_OUT("Cannot load $module");
@@ -29,7 +30,7 @@ BEGIN {
     }
 }
 
-# Copyright 2009-2010 David Solimano
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

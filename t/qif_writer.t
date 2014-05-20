@@ -36,16 +36,18 @@ diag("Header tests");
   open ($fh, $temp_filename) or die "Can't open temp file";
   ok($fh, "Able to open temp file");
 
-  my @expected = ('!Account', 'NTestAccount', 'TType:Invst');
-  my $index = 0;
-  while(<$fh>){
-    if($index >= @expected){
-      last;
-    }
-    my $item = chop($_);
-    warn($item);
-    is($_, $expected[$index++], "Header should match expected");
-  }
+  matchHeader($fh);
+
+  # my @expected = ('!Account', 'NTestAccount', 'TType:Invst');
+  # my $index = 0;
+  # while(<$fh>){
+  #   if($index >= @expected){
+  #     last;
+  #   }
+  #   my $item = chop($_);
+  #   warn($item);
+  #   is($_, $expected[$index++], "Header should match expected");
+  # }
 
   close($fh) or die "Can't close temp file";
 }
@@ -83,13 +85,19 @@ diag("Write one line tests - deferral");
   open ($fh, $temp_filename) or die "Can't open temp file";
   ok($fh, "Able to open temp file");
 
-  my @expected = ('!Account', 'NTestAccount', 'TType:Invst', '^');
-  my $index = 0;
-  while($index < @expected){
-    my $line = <$fh>;
-    chomp $line;
-    is($line, $expected[$index++], "Header should match expected");
-  }
+  # my @expected = ('!Account', 'NTestAccount', 'TType:Invst', '^');
+  # my $index = 0;
+  # while($index < @expected){
+  #   my $line = <$fh>;
+  #   chomp $line;
+  #   is($line, $expected[$index++], "Header should match expected");
+  # }
+
+  matchHeader($fh);
+
+  my $headerLine = <$fh>;
+  chomp $headerLine;
+  is($headerLine, '^');
 
   #now that we've matched the header, we should be able to match the rest of the file
   #order doesn't matter, so check this using a hash;
@@ -120,7 +128,31 @@ diag("Write one line tests - deferral");
   close($fh) or die "Can't close temp file";
 }
 
-# Copyright 2009-2010 David Solimano
+sub matchHeader{
+  my $fh = shift;
+  my $headerLine = <$fh>;
+  chomp $headerLine;
+  is($headerLine, '!Account','First line of header should be account');
+
+  my $sawAccount = 0;
+  my $sawType = 0;
+
+  for(my $index = 0; $index < 2; $index++){
+    $headerLine = <$fh>;
+    chomp $headerLine;
+
+    if('NTestAccount' eq $headerLine){
+      $sawAccount = 1;
+    } elsif('TType:Invst' eq $headerLine){
+      $sawType = 1;
+    }
+  }
+
+  is(1, $sawAccount, "Should see account in header");
+  is(1, $sawType, "Should see type in header");
+}
+
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

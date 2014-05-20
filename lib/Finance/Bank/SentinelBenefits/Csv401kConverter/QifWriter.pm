@@ -1,18 +1,16 @@
 package Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter;
-BEGIN {
-  $Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter::VERSION = '0.5';
-}
+$Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter::VERSION = '1.0';
 use Modern::Perl;
 
 =head1 NAME
 
-
-=head1 VERSION
-
-version 0.5
 Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter -
 Takes C<Finance::Bank::SentinelBenefits::Csv401kConverter::Line> objects
 and writes them out to a QIF file
+
+=head1 VERSION
+
+version 1.0
 
 =head1 SYNOPSIS
 
@@ -81,18 +79,6 @@ sub BUILD {
 
 =head1 Accessors
 
-=head2 $l->trade_date()
-
-The date of the transactions
-
-=cut
-
-has 'trade_date'=> (
-    is        => 'ro',
-    isa       => 'DateTime',
-    required  => 1,
-);
-
 =head2 $l->account()
 
 The account of the transactions
@@ -145,7 +131,7 @@ method output_line(Finance::Bank::SentinelBenefits::Csv401kConverter::Line $line
     # 				 transaction => 101.1 * 20,
     # 	);
 
-  my $date_string = sprintf("%u/%u/%u", $line->date()->mon(), $line->date()->day(), $line->date()->year());
+  my $date_string = sprintf("%u/%u/%4d", $line->date()->mon(), $line->date()->day(), $line->date()->year());
 
   my $price = sprintf("%.6f", $line->total() / $line->quantity());#recalc price to avoid bad quantities
   $price =~ s/0+$//;
@@ -180,7 +166,7 @@ no Moose;
 
 __PACKAGE__->meta->make_immutable;
 
-# Copyright 2009 David Solimano
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

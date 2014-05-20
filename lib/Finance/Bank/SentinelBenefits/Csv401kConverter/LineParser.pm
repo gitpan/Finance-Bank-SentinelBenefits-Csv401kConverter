@@ -1,17 +1,14 @@
 package Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser;
-BEGIN {
-  $Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser::VERSION = '0.5';
-}
-
+$Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser::VERSION = '1.0';
 use Modern::Perl;
 =head1 NAME
 
+Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser - turns
+CSV lines into standardized Line objects
 
 =head1 VERSION
 
-version 0.5
-Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser - turns
-CSV lines into standardized Line objects
+version 1.0
 
 =head1 SYNOPSIS
 
@@ -88,7 +85,10 @@ sub parse_line {
 	    quantity => abs($quantity),
 	    price    => $price,
 	    total    => abs($total),
-	    side     => $memo =~ m/^Sell/ ? 'Sell' : 'Buy',
+	    side     => $memo =~ m/^Sell/       ? 'Sell' 
+		      : $memo =~ m/^Gain\/Loss/ ? 'ReinvDiv'
+		      : $memo =~ m/^Dividend/   ? 'ReinvDiv'
+		      : 'Buy',
 	    source   => $contribution_type =~ m/Employer Matching Contribution/ ? 'Match' : 'Deferral',
 											} );
 	return $parsed_line;
@@ -101,7 +101,7 @@ no Moose;
 
 __PACKAGE__->meta->make_immutable;
 
-# Copyright 2009 David Solimano
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify

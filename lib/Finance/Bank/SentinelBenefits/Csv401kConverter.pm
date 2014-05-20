@@ -1,10 +1,9 @@
 package Finance::Bank::SentinelBenefits::Csv401kConverter;
-BEGIN {
-  $Finance::Bank::SentinelBenefits::Csv401kConverter::VERSION = '0.5';
-}
+$Finance::Bank::SentinelBenefits::Csv401kConverter::VERSION = '1.0';
 use Modern::Perl;
 
 use DateTime;
+use DateTime::Format::Flexible;
 
 =head1 NAME
 
@@ -12,7 +11,7 @@ Finance::Bank::SentinelBenefits::Csv401kConverter - Takes a series of lines in S
 
 =head1 VERSION
 
-version 0.5
+version 1.0
 
 =head1 SYNOPSIS
 
@@ -30,6 +29,16 @@ use MooseX::StrictConstructor;
 use Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap;
 use Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser;
 use Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter;
+use Finance::Bank::SentinelBenefits::Csv401kConverter::SideReverser;
+
+
+=head1 Accessors
+
+=head2 $p->trade_input()
+
+A file handle that supplies the trade data
+
+=cut
 
 has 'trade_input'  => (
     is       => 'ro',
@@ -43,22 +52,24 @@ has 'primary_output_file' => (
     required => 1,
     );
 
-has 'companymatch_output_file' => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 0,
-    );
-
 has 'symbol_map' => (
     is       => 'ro',
     isa      => 'Finance::Bank::SentinelBenefits::Csv401kConverter::SymbolMap',
     required => 1,
     );
 
+=head2 $p->trade_date()
+
+Used if you wish to override the trade date specified in the input file, or if no trade date is available in the files.
+
+If no dates are specified here or in the files, an exception will be thrown.
+
+=cut
+
 has 'trade_date' => (
     is       => 'ro',
     isa      => 'DateTime',
-    required => 1,
+    required => 0,
     );
 
 has 'account'    => (
@@ -73,6 +84,15 @@ has 'companymatch_account' => (
     required => 0,
     );
 
+has '_side_reverser' => (
+    is       => 'ro',
+    isa      => 'Finance::Bank::SentinelBenefits::Csv401kConverter::SideReverser',
+    required => 0,
+    default => sub {
+	Finance::Bank::SentinelBenefits::Csv401kConverter::SideReverser->new();
+    }
+    );
+
 method write_output(){
     my $parser = Finance::Bank::SentinelBenefits::Csv401kConverter::LineParser->new
 	(
@@ -82,32 +102,47 @@ method write_output(){
     my $writer = Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter->new
 	(
 	 output_file => ">" . $self->primary_output_file(),
-	 trade_date  => $self->trade_date(),
 	 account     => $self->account(),
 	);
 
-    my $cm_writer;
-    if($self->companymatch_account()
-       && $self->companymatch_output_file())
-    {
-	$cm_writer = Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter->new
-	(
-	 output_file => ">" . $self->companymatch_output_file(),
-	 trade_date  => $self->trade_date(),
-	 account     => $self->companymatch_account(),
-	);
-	
+    my $fh = $self->trade_input();
+
+    my @lines;
+
+    my $date = $self->trade_date();
+
+    while(<$fh>){
+
+
+      #this line is a date and there is no override, parse it as such
+      if(9 == length && (not defined $self->trade_date()) ){
+	$date = DateTime::Format::Flexible->parse_datetime($_);
+#	warn "date is $date";
+      }else{
+
+	my $line = $parser->parse_line($_, $date);
+
+	if (defined $line) {
+	  $writer->output_line($line);
+
+	  push @lines, $line;
+	}
+      }
     }
 
-    my $fh = $self->trade_input();
-    while(<$fh>){
-	my $line = $parser->parse_line($_, $self->trade_date());
+    $writer->close();
 
-	if(defined $line){
-	    $writer->output_line($line);
+    if($self->companymatch_account())
+    {
+	my $cm_writer = Finance::Bank::SentinelBenefits::Csv401kConverter::QifWriter->new
+	(
+	 output_file => ">>" . $self->primary_output_file(),
+	 account     => $self->companymatch_account(),
+	);
 
-	    if(defined $cm_writer
-		&& $line->source() eq 'Match'){
+	foreach my $line (@lines) {
+
+	    if($line->source() eq 'Match'){
 		my $cm_line = Finance::Bank::SentinelBenefits::Csv401kConverter::Line->new
 		    (
 		     date      => $line->date(),
@@ -117,16 +152,16 @@ method write_output(){
 		     price     => $line->price(),
 		     total     => $line->total(),
 		     source    => $line->source(),
-		     side      => $line->side() eq 'Buy' ? 'ShtSell' : 'Buy',
+		     side      => $self->_side_reverser->flip($line->side()),
 		    );
 		$cm_writer->output_line($cm_line);
 	    }
+
 	}
+
+	$cm_writer->close();
+	
     }
-
-    $writer->close();
-
-    $cm_writer->close() if $cm_writer;
 }
 
 no Moose;
@@ -135,7 +170,7 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-# Copyright 2009-2010 David Solimano
+# Copyright 2009-2011 David Solimano
 # This file is part of Finance::Bank::SentinelBenefits::Csv401kConverter
 
 # Finance::Bank::SentinelBenefits::Csv401kConverter is free software: you can redistribute it and/or modify
